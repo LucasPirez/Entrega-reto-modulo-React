@@ -2,71 +2,77 @@ import { useState, useRef, useEffect } from 'react'
 
 export default function Recorder() {
   const [isRecording, setIsRecording] = useState(false)
-  const [stream, setStream] = useState(null)
-  const mediaRecorder = useRef()
-  const [blob, setBlob] = useState(null)
+  const stream = useRef(null)
+  const mediaRecorder = useRef(null)
+  const [blob, setBlob] = useState([])
   const ref = useRef()
 
   const handleDataAvaileble = (e) => {
     if (e.data && e.data.size > 0) {
-      // Hacer algo con los datos grabados, como almacenarlos en un arreglo
-      console.log('handleDataValaible', e.data)
-
-      const recordedBlob = new Blob([e.data], {
-        type: 'video/webm'
-      })
-      // Mostrar la grabación en el elemento de video
-      const recordedUrl = window.URL.createObjectURL(recordedBlob)
-      // Mostrar la grabación en el elemento de video
-      ref.current.src = null
-      ref.current.srcObject = null
-      ref.current.src = recordedUrl
-      ref.current.controls = true
-      ref.current.play()
+      setBlob((blob) => [...blob, e.data])
     }
   }
 
   const startRecording = async () => {
     ref.current.src = null
     ref.current.srcObject = null
-    try {
-      const streamRecord = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
-      })
+    if (stream.current === null) {
+      try {
+        const streamRecord = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true
+        })
 
-      setStream(streamRecord)
-      ref.current.srcObject = streamRecord
-      const media = new MediaRecorder(streamRecord)
-      console.log(media)
-      media.addEventListener('dataavailable', handleDataAvaileble)
+        stream.current = streamRecord
+        ref.current.srcObject = streamRecord
+        const media = new MediaRecorder(streamRecord)
 
-      media.start()
-      mediaRecorder.current = media
+        media.addEventListener('dataavailable', handleDataAvaileble)
+
+        media.start()
+        mediaRecorder.current = media
+      } catch (error) {
+        console.log(error)
+      }
+    } else {
       console.log(mediaRecorder.current)
-    } catch (error) {
-      console.log(error)
+      mediaRecorder.current.resume()
+      ref.current.srcObject = stream.current
+      // stream.current.getTracks().forEach((str) => str.start())
     }
   }
 
+  const pauseRecording = () => {
+    mediaRecorder.current.pause()
+    // stream.current.getTracks().forEach((str) => str.pause())
+  }
+
   const stopRecording = () => {
-    // Detener el objeto MediaRecorder
     mediaRecorder.current.stop()
+    stream.current.getTracks().forEach((str) => str.stop())
+    setIsRecording(false)
+  }
+
+  useEffect(() => {
     console.log(mediaRecorder.current)
 
-    // Parar el stream de video y audio
-    stream.getTracks().forEach((str) => str.stop())
-    //   this.state.stream.getTracks().forEach((track) => track.stop())
+    if (blob.length && mediaRecorder.current?.state === 'inactive') {
+      const recordedBlob = new Blob(blob, {
+        type: 'video/webm'
+      })
 
-    // Limpiar el estado y reiniciar los valores
-    // this.setState({ mediaRecorder: null, stream: null, isRecording: false })
+      const recordedUrl = window.URL.createObjectURL(recordedBlob)
+      ref.current.src = null
+      ref.current.srcObject = null
+      ref.current.src = recordedUrl
+      ref.current.controls = true
+      ref.current.play()
 
-    setStream(null)
-    mediaRecorder.current = null
-    setIsRecording(false)
+      stream.current = null
+      mediaRecorder.current = null
+    }
+  }, [blob])
 
-    // Hacer algo con los datos grabados, como guardarlos o mostrarlos en el elemento de video
-  }
   return (
     <>
       <div>
@@ -75,11 +81,13 @@ export default function Recorder() {
             ref={ref}
             autoPlay
             playsInline
+            loop
             muted
             style={{ width: '300px', aspectRatio: '12/9', background: '#eee' }}
           />
-          <button onClick={startRecording}>Iniciar grabación</button>
-          <button onClick={stopRecording}>Detener grabación</button>
+          <button onClick={startRecording}>Iniciar</button>
+          <button onClick={pauseRecording}>pause</button>
+          <button onClick={stopRecording}>Detener</button>
         </div>
       </div>
     </>
