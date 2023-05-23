@@ -1,29 +1,16 @@
-import { createContext, useEffect, useContext, useRef, useState } from 'react'
+import { createContext, useContext, useState } from 'react'
 
 export const AppContext = createContext()
 
 export default function AppContextProvider({ children }) {
   const [videosState, setVideosState] = useState(null)
-  const [lengthState, setLengthState] = useState(null)
-  const countVideosRecorded = useRef(0)
 
-  const handleSetLength = (length) => {
-    setLengthState(length)
-  }
-
-  // useEffect(() => {
-  //   console.log(videosState)
-  // }, [videosState])
-
-  const da = {
+  const data = {
     videosState,
-    setVideosState,
-    handleSetLength,
-    lengthState,
-    countVideosRecorded
+    setVideosState
   }
 
-  return <AppContext.Provider value={da}>{children}</AppContext.Provider>
+  return <AppContext.Provider value={data}>{children}</AppContext.Provider>
 }
 
 export const useAppContext = () => {

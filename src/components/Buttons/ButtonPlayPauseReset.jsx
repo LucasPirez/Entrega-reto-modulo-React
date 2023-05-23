@@ -6,7 +6,8 @@ export default function ButtonPlayPause({
   onClickStop,
   isRecording = false,
   isFinish = false,
-  disabled = true
+  disabled = true,
+  scale = '1'
 }) {
   return (
     <>
@@ -14,9 +15,14 @@ export default function ButtonPlayPause({
         <button
           onClick={onClickStop}
           className={`${styles.button} ${styles.stop}`}
+          style={{ transform: `scale(${scale})` }}
         ></button>
       ) : isFinish ? (
-        <button onClick={onClickPlay} className={`${styles.button}`}>
+        <button
+          onClick={onClickPlay}
+          className={`${styles.button}`}
+          style={{ transform: `scale(${scale})` }}
+        >
           <img src={img} alt="" />
         </button>
       ) : (
@@ -24,6 +30,7 @@ export default function ButtonPlayPause({
           onClick={onClickPlay}
           className={`${styles.button} ${styles.play}`}
           disabled={!disabled}
+          style={{ transform: `scale(${scale})` }}
         ></button>
       )}
     </>

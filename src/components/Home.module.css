@@ -1,9 +1,23 @@
+.container {
+  margin: auto;
+  max-width: fit-content;
+  text-align: right;
+}
+
 .section {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   justify-content: center;
-  width: 100%;
   height: auto;
-  gap: 30px;
+  width: auto;
+  gap: 20px;
+}
+
+.title {
+  text-align: center;
+  margin: 90px;
+}
+
+.button {
+  margin-top: 30px;
 }

@@ -1,10 +1,14 @@
 .container {
   position: relative;
   width: 300px;
-  height: 350px;
+  height: 360px;
   overflow: hidden;
   background: #eee;
   border-radius: 10px;
+}
+
+.container:hover {
+  box-shadow: 0 0 10px 4px #534f4c5e;
 }
 
 .video {
@@ -17,6 +21,7 @@
 .pregunta {
   color: #000;
   padding: 4px;
+  text-align: left;
 }
 
 .buttonRecorder {

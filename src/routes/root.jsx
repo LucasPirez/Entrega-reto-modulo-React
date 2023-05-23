@@ -20,7 +20,7 @@ export default function Root() {
         })
         setVideosState(dicVideos)
       } catch (error) {
-        console.log(error)
+        throw new Error(error)
       }
     }
 

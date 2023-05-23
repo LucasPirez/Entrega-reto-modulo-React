@@ -1,0 +1,37 @@
+.container {
+  position: relative;
+  background-color: #aaa;
+  color: #000;
+  border-radius: 10px;
+}
+
+.video {
+  width: 100%;
+  border-radius: 10px 10px 0 0;
+  background-color: #000;
+  aspect-ratio: 12/9;
+}
+
+.pregunta {
+  padding: 10px;
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.buttonRecord {
+  position: absolute;
+  background: transparent;
+  top: 77%;
+  left: 30px;
+}
+
+.circle {
+  display: flex;
+  width: 75px;
+  justify-content: space-between;
+  align-items: center;
+
+  position: absolute;
+  right: 20px;
+  top: 10px;
+}

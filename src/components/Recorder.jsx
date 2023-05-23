@@ -3,10 +3,12 @@ import CircleRecording from './CircleRecording'
 import { useParams } from 'react-router-dom'
 import { useAppContext } from './context'
 import ButtonPlayPauseReset from './Buttons/ButtonPlayPauseReset'
+import styles from './Recorder.module.css'
+import Clock from './Clock'
 
 export default function Recorder() {
   const { id } = useParams()
-  const { videosState, countVideosRecorded, setVideosState } = useAppContext()
+  const { videosState, setVideosState } = useAppContext()
   const mediaRecorder = useRef(null)
   const stream = useRef(null)
   const [recordingState, setRecordingState] = useState({
@@ -17,18 +19,25 @@ export default function Recorder() {
   const ref = useRef()
 
   useEffect(() => {
-    if (stream.current) {
+    if (recordingState.streamExist) {
       ref.current.srcObject = null
       ref.current.src = null
       mediaRecorder.current = null
 
       if (videosState[id].video) {
-        console.log(id)
-        setRecordingState({ isRecording: false, finish: true })
+        setRecordingState((prev) => ({
+          ...prev,
+          isRecording: false,
+          finish: true
+        }))
         ref.current.src = videosState[id].video
         ref.current.play()
       } else {
-        setRecordingState({ isRecording: false, finish: false })
+        setRecordingState((prev) => ({
+          ...prev,
+          isRecording: false,
+          finish: false
+        }))
 
         ref.current.srcObject = stream.current
       }
@@ -36,7 +45,6 @@ export default function Recorder() {
   }, [id, recordingState.streamExist])
 
   useEffect(() => {
-    console.log('effec stream')
     ;(async () => {
       try {
         const streamRecord = await navigator.mediaDevices.getUserMedia({
@@ -46,12 +54,17 @@ export default function Recorder() {
         stream.current = streamRecord
         setRecordingState({ ...recordingState, streamExist: true })
       } catch (error) {
-        console.log(error)
+        if (error.message === 'Permission denied') {
+          alert(
+            'La camara y/o microfono se encuentran desabilitados.Si desea continuar habilitelos y recargue la app en el root'
+          )
+        }
+        throw new Error(error.message)
       }
     })()
 
     return () => {
-      stream.current.getTracks().forEach((str) => str.stop())
+      stream.current?.getTracks().forEach((str) => str.stop())
     }
   }, [])
 
@@ -65,24 +78,16 @@ export default function Recorder() {
       ref.current.srcObject = null
       ref.current.src = recordedUrl
       ref.current.play()
-      if (videosState[id]['video']) {
-        setVideosState({
-          ...videosState,
-          [id]: { ...videosState[id], video: recordedUrl }
-        })
-        // videosState[id]['video'] = recordedUrl
-      } else {
-        setVideosState({
-          ...videosState,
-          [id]: { ...videosState[id], video: recordedUrl }
-        })
-        countVideosRecorded.current++
-      }
+
+      setVideosState({
+        ...videosState,
+        [id]: { ...videosState[id], video: recordedUrl }
+      })
     }
   }
 
   function startRecording() {
-    setRecordingState({ isRecording: true, finish: false })
+    setRecordingState((prev) => ({ ...prev, isRecording: true, finish: false }))
     mediaRecorder.current = null
     ;(async () => {
       const media = new MediaRecorder(stream.current)
@@ -96,38 +101,44 @@ export default function Recorder() {
 
   const stopRecording = () => {
     mediaRecorder.current.stop()
-    setRecordingState({ isRecording: false, finish: true })
+    setRecordingState((prev) => ({
+      ...prev,
+      isRecording: false,
+      finish: true
+    }))
   }
 
   return (
-    <>
-      <div>
-        <div>
-          <video
-            ref={ref}
-            autoPlay
-            playsInline
-            loop
-            muted
-            style={{
-              width: '300px',
-              aspectRatio: '12/9',
-              background: '#a000aa76',
-              opacity: !recordingState.isRecording && 0.5
-            }}
-          />
-          <figcaption>{videosState[id].pregunta}</figcaption>
-          <ButtonPlayPauseReset
-            onClickPlay={startRecording}
-            onClickStop={stopRecording}
-            isRecording={recordingState.isRecording}
-            isFinish={recordingState.finish}
-            disabled={recordingState.streamExist}
-          />
-
-          <CircleRecording bool={recordingState.isRecording} />
-        </div>
+    <div className={styles.container}>
+      <video
+        className={styles.video}
+        ref={ref}
+        autoPlay
+        playsInline
+        loop
+        muted
+      />
+      <figcaption className={styles.pregunta}>
+        {videosState[id].pregunta}
+      </figcaption>
+      <div className={styles.buttonRecord}>
+        <ButtonPlayPauseReset
+          onClickPlay={startRecording}
+          onClickStop={stopRecording}
+          isRecording={recordingState.isRecording}
+          isFinish={recordingState.finish}
+          disabled={recordingState.streamExist}
+          scale="1.5"
+        />
       </div>
-    </>
+
+      <div className={styles.circle}>
+        <Clock
+          isRecording={recordingState.isRecording}
+          handleStop={stopRecording}
+        />
+        <CircleRecording bool={recordingState.isRecording} />
+      </div>
+    </div>
   )
 }
