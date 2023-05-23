@@ -1,77 +1,103 @@
 import { useState, useRef, useEffect } from 'react'
+import CircleRecording from './CircleRecording'
+import { useParams } from 'react-router-dom'
+import { useAppContext } from './context'
+import ButtonPlayPauseReset from './Buttons/ButtonPlayPauseReset'
 
 export default function Recorder() {
-  const [isRecording, setIsRecording] = useState(false)
-  const stream = useRef(null)
+  const { id } = useParams()
+  const { videosState, countVideosRecorded, setVideosState } = useAppContext()
   const mediaRecorder = useRef(null)
-  const [blob, setBlob] = useState([])
+  const stream = useRef(null)
+  const [recordingState, setRecordingState] = useState({
+    isRecording: false,
+    finish: false,
+    streamExist: false
+  })
   const ref = useRef()
 
-  const handleDataAvaileble = (e) => {
-    if (e.data && e.data.size > 0) {
-      setBlob((blob) => [...blob, e.data])
-    }
-  }
+  useEffect(() => {
+    if (stream.current) {
+      ref.current.srcObject = null
+      ref.current.src = null
+      mediaRecorder.current = null
 
-  const startRecording = async () => {
-    ref.current.src = null
-    ref.current.srcObject = null
-    if (stream.current === null) {
+      if (videosState[id].video) {
+        console.log(id)
+        setRecordingState({ isRecording: false, finish: true })
+        ref.current.src = videosState[id].video
+        ref.current.play()
+      } else {
+        setRecordingState({ isRecording: false, finish: false })
+
+        ref.current.srcObject = stream.current
+      }
+    }
+  }, [id, recordingState.streamExist])
+
+  useEffect(() => {
+    console.log('effec stream')
+    ;(async () => {
       try {
         const streamRecord = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: true
         })
-
         stream.current = streamRecord
-        ref.current.srcObject = streamRecord
-        const media = new MediaRecorder(streamRecord)
-
-        media.addEventListener('dataavailable', handleDataAvaileble)
-
-        media.start()
-        mediaRecorder.current = media
+        setRecordingState({ ...recordingState, streamExist: true })
       } catch (error) {
         console.log(error)
       }
-    } else {
-      console.log(mediaRecorder.current)
-      mediaRecorder.current.resume()
-      ref.current.srcObject = stream.current
-      // stream.current.getTracks().forEach((str) => str.start())
+    })()
+
+    return () => {
+      stream.current.getTracks().forEach((str) => str.stop())
     }
-  }
+  }, [])
 
-  const pauseRecording = () => {
-    mediaRecorder.current.pause()
-    // stream.current.getTracks().forEach((str) => str.pause())
-  }
-
-  const stopRecording = () => {
-    mediaRecorder.current.stop()
-    stream.current.getTracks().forEach((str) => str.stop())
-    setIsRecording(false)
-  }
-
-  useEffect(() => {
-    console.log(mediaRecorder.current)
-
-    if (blob.length && mediaRecorder.current?.state === 'inactive') {
-      const recordedBlob = new Blob(blob, {
+  const handleDataAvaileble = (e) => {
+    if (e.data && e.data.size > 0) {
+      const recordedBlob = new Blob([e.data], {
         type: 'video/webm'
       })
-
       const recordedUrl = window.URL.createObjectURL(recordedBlob)
       ref.current.src = null
       ref.current.srcObject = null
       ref.current.src = recordedUrl
-      ref.current.controls = true
       ref.current.play()
-
-      stream.current = null
-      mediaRecorder.current = null
+      if (videosState[id]['video']) {
+        setVideosState({
+          ...videosState,
+          [id]: { ...videosState[id], video: recordedUrl }
+        })
+        // videosState[id]['video'] = recordedUrl
+      } else {
+        setVideosState({
+          ...videosState,
+          [id]: { ...videosState[id], video: recordedUrl }
+        })
+        countVideosRecorded.current++
+      }
     }
-  }, [blob])
+  }
+
+  function startRecording() {
+    setRecordingState({ isRecording: true, finish: false })
+    mediaRecorder.current = null
+    ;(async () => {
+      const media = new MediaRecorder(stream.current)
+      media.addEventListener('dataavailable', handleDataAvaileble)
+      mediaRecorder.current = media
+    })()
+    mediaRecorder.current.start()
+    ref.current.src = null
+    ref.current.srcObject = stream.current
+  }
+
+  const stopRecording = () => {
+    mediaRecorder.current.stop()
+    setRecordingState({ isRecording: false, finish: true })
+  }
 
   return (
     <>
@@ -83,11 +109,23 @@ export default function Recorder() {
             playsInline
             loop
             muted
-            style={{ width: '300px', aspectRatio: '12/9', background: '#eee' }}
+            style={{
+              width: '300px',
+              aspectRatio: '12/9',
+              background: '#a000aa76',
+              opacity: !recordingState.isRecording && 0.5
+            }}
           />
-          <button onClick={startRecording}>Iniciar</button>
-          <button onClick={pauseRecording}>pause</button>
-          <button onClick={stopRecording}>Detener</button>
+          <figcaption>{videosState[id].pregunta}</figcaption>
+          <ButtonPlayPauseReset
+            onClickPlay={startRecording}
+            onClickStop={stopRecording}
+            isRecording={recordingState.isRecording}
+            isFinish={recordingState.finish}
+            disabled={recordingState.streamExist}
+          />
+
+          <CircleRecording bool={recordingState.isRecording} />
         </div>
       </div>
     </>

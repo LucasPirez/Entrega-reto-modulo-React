@@ -1,0 +1,26 @@
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background-color: #a0a0a0;
+}
+
+.play::before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 10px solid white;
+  border-bottom: 5px solid transparent;
+  border-top: 5px solid transparent;
+}
+
+.stop::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: white;
+}

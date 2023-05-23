@@ -1,42 +1,35 @@
-import { Outlet } from 'react-router-dom'
-import Recorder from '../components/Recorder'
+import { useEffect } from 'react'
+import { sendInfo } from '../simulateServer'
+import Home from '../components/Home'
+import { useAppContext } from '../components/context'
 
 export default function Root() {
+  const { setVideosState, videosState } = useAppContext()
+
+  useEffect(() => {
+    async function fetch() {
+      try {
+        const response = await sendInfo()
+        const dicVideos = {}
+        response.forEach((u, i) => {
+          dicVideos[i + 1] = {
+            pregunta: u.pregunta,
+            video: null,
+            id: i + 1
+          }
+        })
+        setVideosState(dicVideos)
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    if (!videosState) fetch()
+  }, [])
+
   return (
     <>
-      {/* <div id="sidebar">
-        <h1>React Router Contacts</h1>
-        <div>
-          <form id="search-form" role="search">
-            <input
-              id="q"
-              aria-label="Search contacts"
-              placeholder="Search"
-              type="search"
-              name="q"
-            />
-            <div id="search-spinner" aria-hidden hidden={true} />
-            <div className="sr-only" aria-live="polite"></div>
-          </form>
-          <form method="post">
-            <button type="submit">New</button>
-          </form>
-        </div>
-        <nav>
-          <ul>
-            <li>
-              <a href={`/contacts/1`}>Your Name</a>
-            </li>
-            <li>
-              <a href={`/contacts/2`}>Your Friend</a>
-            </li>
-          </ul>
-        </nav>
-      </div>
-      <div id="detail">
-        <Outlet />
-      </div> */}
-      <Recorder />
+      <Home />
     </>
   )
 }

@@ -1,0 +1,22 @@
+.circle {
+  width: 16px;
+  height: 16px;
+  border-radius: 100%;
+  background-color: rgb(217, 23, 23);
+  z-index: 99;
+  box-shadow: 0px 0px 4px 3px rgb(205, 24, 24);
+}
+
+.animate {
+  animation: animateRecorder 1.5s infinite linear;
+}
+
+@keyframes animateRecorder {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
